@@ -67,7 +67,6 @@ TIMING_OSC_CLIENT_LOOP = 4
 TIMING_SCRIBBLESTRIP_RESTORE = 4
 TIMING_FADER_ECHO = 0.1
 
-SIGNALS = [signal.SIGINT, signal.SIGABRT, signal.SIGTERM]
 
 CHANNELS = 24
 FADER_RANGE = 2 ** 10
@@ -1664,7 +1663,7 @@ class _ReaOscsession(object):
                             )
                         # Call the desk_to_computer method of the class
                         inst.d_c(parsed_cmd)
-                    except:
+                    except Exception:
                         self.log.error(
                             'Error doing d_c in cmd_class. Track: %s Class: %s',
                             str(track_number),
@@ -1737,7 +1736,7 @@ class _ReaOscsession(object):
 
         except ReaException:
             self.log.warn('Internal Reacontrol Error responding to daw_to_desk OSC message', exc_info=True)
-        except:
+        except Exception:
             self.log.error('Unhandled Error responding to daw_to_desk OSC message', exc_info=True)
 
     # Threaded methods
@@ -1862,7 +1861,7 @@ class _ReaOscsession(object):
         if self.osc_client_is_connected:
             try:
                 self.osc_client.send(osc_msg)
-            except:
+            except Exception:
                 self.log.error("Error sending OSC msg:",
                                exc_info=sys.exc_info())
                 self._disconnect_osc_client()
@@ -1901,7 +1900,7 @@ class _ReaOscsession(object):
             self.daemon_client = None
             self.daemon_client_is_connected = False
             self.is_closing = False
-        except:
+        except Exception:
             self.log.error('Error during init of OSC session', exc_info=True)
             raise
 
@@ -1932,8 +1931,8 @@ class _ReaOscsession(object):
             self.thread_osc_client.daemon = True
             self.thread_osc_client.start()
 
-            self.thread_daemon_client.join()
-        except:
+            #self.thread_daemon_client.join()
+        except Exception:
             self.log.error('Error caught by Outer error trap for OSC client session threads:', exc_info=True)
             raise
 
@@ -2011,7 +2010,16 @@ def main(sessionclass):
         raise optparse.OptionError('No network has the IP address specified.', 'listen')
 
     # Set up Interrupt signal handler so process can close cleanly
-    for sig in SIGNALS:
+    # if an external signal is received
+    if sys.platform.startswith('win'):
+        # TODO test these in Winders
+        signals = [signal.SIGTERM, signal.SIGHUP, signal.SIGINT, signal.SIGABRT]
+    else:
+        # TODO check other un*x variants
+        # OSC (Mojave) responding to these 2
+        signals = [signal.SIGTERM, signal.SIGHUP]
+
+    for sig in signals:
         signal.signal(sig, signal_handler)
 
     # Build the session

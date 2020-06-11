@@ -127,8 +127,8 @@ class ProCscribstrip(_ReaScribStrip):
             ProCscribstrip.digits,
             ProCscribstrip.bank,
             ProCscribstrip.defaultaddress)
-        # TODO = total guess - refer back to ProC scribstrip diferences.
-        self.cmdbytes[5] = 0x01
+        # Pro Control scribs have this byte set to 0 not 1
+        self.cmdbytes[2] = 0x00
 
 
 # TODO, unless specifics are needed the next few classes can be collapsed by refactoring the
